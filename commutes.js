@@ -102,3 +102,13 @@ class Commutes {
   }
 }
 
+// Función global para inicializar el mapa
+function initMap() {
+  const CONFIGURATION = {
+    mapOptions: {
+      center: { lat: -11.776616, lng: -75.5000544 }, // Puedes cambiar estas coordenadas por las iniciales
+      zoom: 14
+    }
+  };
+  new Commutes(CONFIGURATION);
+}
