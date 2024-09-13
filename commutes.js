@@ -11,7 +11,7 @@ class Commutes {
   init() {
     // Iniciar el mapa
     const mapOptions = this.config.mapOptions;
-    this.map = new google.maps.Map(document.querySelector('.map-view'), mapOptions);
+    this.map = new google.maps.Map(document.getElementById('map'), mapOptions);
     this.directionsRenderer.setMap(this.map);
 
     // Solicitar ubicación del dispositivo
@@ -21,11 +21,10 @@ class Commutes {
     const destination = this.getDestinationFromUrl();
     if (destination) {
       this.destinationCoords = destination;
-      console.log('Destino obtenido desde la URL:', this.destinationCoords);
     }
 
     // Configurar el botón de navegación
-    document.querySelector('.add-destination-button').addEventListener('click', () => {
+    document.querySelector('.navigate-btn').addEventListener('click', () => {
       if (this.destinationCoords) {
         this.navigateToDestination(this.destinationCoords);
       }
@@ -41,7 +40,15 @@ class Commutes {
           lng: position.coords.longitude
         };
         this.map.setCenter(currentLocation);
-        console.log('Ubicación actual:', currentLocation);
+
+        // Agregar marcador para la ubicación actual
+        new google.maps.Marker({
+          position: currentLocation,
+          map: this.map,
+          title: 'Estás aquí'
+        });
+
+        this.currentLocation = currentLocation;
       }, (error) => {
         console.error('Error obteniendo la ubicación:', error);
         alert('Por favor, habilita el GPS para obtener tu ubicación actual.');
@@ -56,7 +63,7 @@ class Commutes {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = parseFloat(urlParams.get('lat'));
     const lng = parseFloat(urlParams.get('long'));
-    
+
     if (!isNaN(lat) && !isNaN(lng)) {
       return { lat, lng };
     } else {
@@ -68,25 +75,22 @@ class Commutes {
 
   // Navegar hacia el destino utilizando Google Maps y el modo de conducción
   navigateToDestination(destinationCoords) {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const currentLocation = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        const request = {
-          origin: currentLocation,
-          destination: destinationCoords,
-          travelMode: google.maps.TravelMode.DRIVING  // Modo conducción
-        };
-        this.directionsService.route(request, (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
-            this.directionsRenderer.setDirections(result);
-          } else {
-            console.error('Error calculando la ruta:', status);
-          }
-        });
+    if (this.currentLocation) {
+      const request = {
+        origin: this.currentLocation,
+        destination: destinationCoords,
+        travelMode: google.maps.TravelMode.DRIVING  // Modo conducción
+      };
+      this.directionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          this.directionsRenderer.setDirections(result);
+        } else {
+          console.error('Error calculando la ruta:', status);
+        }
       });
+    } else {
+      console.error('Ubicación actual no disponible.');
+      alert('No se pudo obtener tu ubicación actual.');
     }
   }
 }
